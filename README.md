@@ -1,4 +1,4 @@
-# Partition-based Distance and Shortest Paths Query Processing Framework
+# ParDiSP Framework
 
 The code in this repository was used in the following publication (please cite):
 
