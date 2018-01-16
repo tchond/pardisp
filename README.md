@@ -15,4 +15,4 @@ $ ./run.exec -f [ROAD_NETWORK] -p [PARTITION]
 
 ## License
 
-This work is licensed under GNU Affero General Public License (see COPYING file).
+This work is licensed under GNU Affero General Public License.
