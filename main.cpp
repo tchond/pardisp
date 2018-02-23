@@ -75,37 +75,17 @@ int main(int argc, char **argv) {
 	/*
 		DISTANCE QUERIES
 	 */
-	 
-	double timeStart, timePardisp = 0, timeDijkstra = 0;
-	 
-    int problems = 0;
+	 	 
 	cout << "----- DIST -----" << endl;
-	for(int i=1;i<=10000;i++) {
+	for(int i=1;i<=1000;i++) {
     	int src = (int) (rand() % rN->numNodes);
     	int trg = (int) (rand() % rN->numNodes);
     	
-    	//int src = 1120;
-    	//int trg = 3817;
-    	
-    	timeStart = GetTimeMicros();
     	dist = algo.distance(src,trg);
-    	timePardisp += GetTimeMicros() - timeStart;
-    	
-    	timeStart = GetTimeMicros();
-        dist2 = Dijkstra(rN,src,trg).second;
-        timeDijkstra += GetTimeMicros() - timeStart;
         
-        //bool sameComp = (mapPair.first[src] == mapPair.first[trg]);
-        bool correct = dist == dist2;
-        if(!correct) {
-            cout << src << "\t" << trg << "\t" << dist << "\t" << dist2 << "\t" << correct << endl;
-            problems++;
-		}
+        cout << src << "\t" << trg << "\t" << dist << endl;
         	
     }
-    cout << "PROBLEMS: " << problems << endl;
-    cout << "ParDiSP time: " << (timePardisp/10000) << endl;
-    cout << "Dijkstra time: " << (timeDijkstra/10000) << endl;
   	
     delete rN;
     return 0;

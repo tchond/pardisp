@@ -55,7 +55,7 @@ struct SubgraphCH {
 	SubgraphCH(vector<pair<pair<int,int>,int>> &edgesWithWeights, unordered_map<int,int> &mapOrigToTransit, vector<int> &mapTransitToOrig);
 
 	Matrix<EdgeWeight> manyToMany(vector<NodeID> sources, vector<NodeID> targets);
-	void get_shortest_path(int source, int target);
+	int get_shortest_path(int source, int target);
 };
 
 // doesn't look nice, but required by the compiler (gcc 4)

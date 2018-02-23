@@ -51,17 +51,18 @@ int ParDiSP::tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget, 
 	return minDist;
 }
 
-pair<int,int> ParDiSP::tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry) {
+pair<pair<int,int>,int> ParDiSP::tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry, int srcComp, int trgComp) {
 	
-	pair<int,int> borders;
+	pair<pair<int,int>,int> borders;
 	
-	int minDist = INT_MAX;
+	borders.second = INT_MAX;
 	int dist;
 	int idx = -1;
 	int modulo;
 	
 	vector<int> interim(idtTarget.size(),INT_MAX);
-
+	vector<int> bordersCand(idtTarget.size());
+	
 	for(int i=0;i<cdmEntry.size();i++) {
 		modulo = i%idtSource.size();
 		if(modulo == 0) 
@@ -69,15 +70,16 @@ pair<int,int> ParDiSP::tripleDistanceJoinBorders(vector<int> &idtSource, vector<
 		dist = cdmEntry[i] + idtSource[modulo];
 		if(interim[idx] > dist) {
 			interim[idx] = dist;
-			borders.first = modulo;
+			bordersCand[idx] = this->outBordersStore[srcComp][modulo];
 		}	
 	}
 	
 	for(int i=0;i<interim.size();i++) {
 		dist = interim[i]+idtTarget[i];
-		if(dist < minDist) {
-			minDist = dist;
-			borders.second = i;
+		if(dist < borders.second) {
+			borders.second = dist;
+			borders.first.first = bordersCand[i];
+			borders.first.second = this->incBordersStore[trgComp][i];
 		}
 	}
 	interim.clear();

@@ -292,10 +292,10 @@ public:
             out << node(e) << " " << node(e+1) << " " << _weights[e] << " " << color << endl;
     }
     
-private:
+
     /** The nodes of this path. */
     vector<NodeID> _nodes;
-    
+private:  
     /** The weights of the edges of this path. */
     vector<EdgeWeight> _weights;
 

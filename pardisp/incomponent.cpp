@@ -131,6 +131,7 @@ pair<Path, double> ParDiSP::ALT_Path(RoadNetwork *rN, int source, int target) {
     int bTo, bFrom;
     std::vector<bool> visited(rN->numNodes, false);
     vector<Label*> allCreatedLabels;
+    vector<int> distances(this->rN->numNodes,INT_MAX);
         
 	int landmark = 0;
     newLowerBound = 0;
@@ -147,7 +148,7 @@ pair<Path, double> ParDiSP::ALT_Path(RoadNetwork *rN, int source, int target) {
     		landmark = l;
     		newLowerBound = tmpBound;
     	}
-    }    
+    }        
      
     newPath.push_back(source);
     
@@ -158,6 +159,7 @@ pair<Path, double> ParDiSP::ALT_Path(RoadNetwork *rN, int source, int target) {
     while (!Q.empty())     {
         Label *curLabel = Q.top();
         Q.pop();
+        distances[curLabel->node_id] = curLabel->length;
         
         if (visited[curLabel->node_id])
             continue;
@@ -174,23 +176,26 @@ pair<Path, double> ParDiSP::ALT_Path(RoadNetwork *rN, int source, int target) {
         else {
             // For each outgoing edge.
             for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel->node_id].begin(); iterAdj != rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
+                
                 newLength = curLabel->length + iterAdj->second;
                 newPath = curLabel->path;
                 newPath.push_back(iterAdj->first);
+                if(!this->cem[iterAdj->first][this->cm[target]])
+                	continue;
                 
-                if(this->cm[iterAdj->first] != this->cm[target] && this->cem[iterAdj->first][this->cm[target]]) {
-                	newLowerBound = newLength;
-                }
-                else {
+                if(this->cm[iterAdj->first] == this->cm[target]) {
                 	bTo = abs(this->outIDT[iterAdj->first][landmark]-this->outIDT[target][landmark]);
     				bFrom = abs(this->incIDT[iterAdj->first][landmark]-this->incIDT[target][landmark]);
     				if(bTo > bFrom)
     					newLowerBound = newLength + bTo;
     				else 
-    					newLowerBound = newLength + bFrom;
+    					newLowerBound = newLength + bFrom;         	
                 }
-    				
-                if (!visited[iterAdj->first]) {
+                else {
+                	newLowerBound = newLength;
+                }
+				//cout << "[DEBUG] " << newLowerBound << endl;
+                if (!visited[iterAdj->first] || newLength < distances[iterAdj->first]) {
                 	Label *tlabel = new Label(iterAdj->first, newPath, newLength, newLowerBound);
                     Q.push(tlabel);
                 	allCreatedLabels.push_back(tlabel);

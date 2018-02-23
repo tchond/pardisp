@@ -282,32 +282,38 @@ int ParDiSP::distance(int source, int target) {
 	-----
 	Return the shortest path from the source to the target.
 */
-Path ParDiSP::shortest_path(int source, int target) {
-	Path path;
-	path.push_back(source);
+/*
+pair<Path,int> ParDiSP::shortest_path(int source, int target) {
+	pair<Path,int> result;
+	result.first.push_back(source);
 	
 	int srcComp = this->cm[source];
 	int trgComp = this->cm[target];
 	
-	pair<int,int> borders;
-	int dist = -1;
+	pair<pair<int,int>,int> borders;
+	result.second = 0;
 	
 	if(srcComp != trgComp) {
-		borders = this->tripleDistanceJoinBorders(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp]);
-		//if(this->transitNet == NULL) {
-		//	cout << "Another WOW" << endl;
-		//	exit(1);
-		//}
-		this->transitNet->get_shortest_path(this->outBordersStore[srcComp][borders.first], this->incBordersStore[trgComp][borders.second]);
+		borders = this->tripleDistanceJoinBorders(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp], srcComp, trgComp);
+		
+		// The next three need to change
+		int medDist = this->transitNet->get_shortest_path(borders.first.first, borders.first.second);
+		//int srcDist = this->ALT(source, borders.first.first);
+		//int trgDist = this->ALT(borders.first.second, target);
+		//cout << "[DEBUG] " << this->cm[source] << " - " << this->cm[target] << endl;
+		//cout << "[DEBUG] " << this->cm[borders.first.first] << " - " << this->cm[borders.first.second] << endl;
+		//cout << "[DEBUG] " << borders.first.first << " - " << borders.first.second << endl;
+		//cout << "[DEBUG] " << srcDist << " + " << medDist << " + " << trgDist << " == " << borders.second << endl;
+		result.second = borders.second;
+		//result.second = srcDist + medDist + trgDist;
 	}
 	else {
-		dist = this->ALT_Path(this->rN,source,target).second;
+		result.second = this->ALT_Path(this->rN,source,target).second;
 	}
-	
-	path.push_back(target);
-	return path;
+	result.first.push_back(target);
+	return result;
 }
-
+*/
 /*
 	Dijkstra's algorithm for testing purposes
 */

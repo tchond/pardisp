@@ -130,14 +130,16 @@ class ParDiSP {
 
 	// Cross-component queries	
 	int tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
-	pair<int,int> tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
+	pair<pair<int,int>,int> tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry, int srcComp, int trgComp);
+	Path nodeToBorderRetrieval(int source, int targetBorder); // NOT IMPLEMENTED YET
+	Path borderToNodeRetrieval(int sourceBorder, int target); // NOT IMPLEMENTED YET
 	
 	// Public constructor and query processing methods
 public:
 	ParDiSP(RoadNetwork *rN, ComponentsMap &cm, int components);
 	~ParDiSP() {};
 	int distance(int source, int target);
-	Path shortest_path(int source, int target);
+	pair<Path,int> shortest_path(int source, int target);
 };
 
 /* TESTING */
