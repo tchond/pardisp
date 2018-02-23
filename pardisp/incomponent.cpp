@@ -29,6 +29,7 @@ double ParDiSP::ALT(int source, int target) {
     int bTo, bFrom;
     std::vector<bool> visited(this->rN->numNodes, false);
     vector<Label*> allCreatedLabels;
+    vector<int> distances(this->rN->numNodes,INT_MAX);
         
 	int landmark = 0;
     newLowerBound = 0;
@@ -54,14 +55,29 @@ double ParDiSP::ALT(int source, int target) {
     while (!Q.empty())     {
         Label *curLabel = Q.top();
         Q.pop();
+        distances[curLabel->node_id] = curLabel->length;
         
-        if (visited[curLabel->node_id])
+        
+        if (visited[curLabel->node_id] && (this->cm[curLabel->node_id] == this->cm[target]))
             continue;
         
         visited[curLabel->node_id] = true;
+        bool ext = this->cem[curLabel->node_id][this->cm[source]];
+        
+        //cout << "[DEBUG] curLabel->length = " << curLabel->length << endl;
+        //cout << "[DEBUG] curLabel->fDist =  " << curLabel->fDist << endl;
+        //cout << "[DEBUG] curLabel->component = " << this->cm[curLabel->node_id] << endl;
+        //cout << "[DEBUG] next->length = " << Q.top()->length << endl;
+        //cout << "[DEBUG] next->fDist = " << Q.top()->fDist << endl;
+        //cout << "[DEBUG] next->component = " << this->cm[Q.top()->node_id] << endl;
+        
         
         // Found target.
         if (curLabel->node_id == target) {
+        	//cout << "-- [DEBUG] curLabel->length = " << curLabel->length << endl;
+        	//cout << "-- [DEBUG] curLabel->fDist =  " << curLabel->fDist << endl;
+        	//cout << "-- [DEBUG] next->length = " << Q.top()->length << endl;
+        	//cout << "-- [DEBUG] next->fDist = " << Q.top()->fDist << endl;
             resLength = curLabel->length;
             break;
         }
@@ -71,27 +87,32 @@ double ParDiSP::ALT(int source, int target) {
             for (EdgeList::iterator iterAdj = this->rN->adjListOut[curLabel->node_id].begin(); iterAdj != this->rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
                 newLength = curLabel->length + iterAdj->second;
                 
-                if(this->cm[iterAdj->first] != this->cm[target] && this->cem[iterAdj->first][this->cm[target]]) {
-                	newLowerBound = newLength;
-                }
-                else {
+                if(!this->cem[iterAdj->first][this->cm[target]])
+                	continue;
+                
+                if(this->cm[iterAdj->first] == this->cm[target]) {
                 	bTo = abs(this->outIDT[iterAdj->first][landmark]-this->outIDT[target][landmark]);
     				bFrom = abs(this->incIDT[iterAdj->first][landmark]-this->incIDT[target][landmark]);
     				if(bTo > bFrom)
     					newLowerBound = newLength + bTo;
     				else 
-    					newLowerBound = newLength + bFrom;
+    					newLowerBound = newLength + bFrom;         	
                 }
-    				
-                if (!visited[iterAdj->first]) {
+                else {
+                	newLowerBound = newLength;
+                }
+				//cout << "[DEBUG] " << newLowerBound << endl;
+                if (!visited[iterAdj->first] || newLength < distances[iterAdj->first]) {
+                	//cout << "[DEBUG] " << newLowerBound << " queued" << endl;
                 	Label *tlabel = new Label(iterAdj->first, newLength, newLowerBound);
                     Q.push(tlabel);
                 	allCreatedLabels.push_back(tlabel);
                 }
             }
         }
+        //cout << "-------" << endl;
     }
-    
+    //cout << this->cm[source] << " = " << this->cm[target] << endl;
     //cout << "ALT labels = " << allCreatedLabels.size() << endl; 
     for(int i=0;i<allCreatedLabels.size();i++) {
     	delete allCreatedLabels[i];
