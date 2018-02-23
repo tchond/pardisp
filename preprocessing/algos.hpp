@@ -36,8 +36,6 @@ pair<Path,double> DijkstraRev(RoadNetwork *rN, int source, int target);
 pair<Path, double> DijkstraLimited(RoadNetwork *rN, int source, int target, vector<int> &cm, vector<vector<bool>> &cemEntry);
 
 
-pair<Path, double> ALT(RoadNetwork *rN, int source, int target, vector<int> &fromLandmark, vector<int> &toLandmark);
-
 // This function is used to compute the component extension
 set<int> getPathsUnion(RoadNetwork *rN, unordered_set<int> &sources, unordered_set<int> &targets);
 
@@ -73,10 +71,11 @@ public:
     mycomparison(const bool& revparam=false) {
     	reverse=revparam;
     }
-    bool operator() (const Label& lhs, const Label&rhs) const {
-        return (lhs.length>rhs.length);
+    bool operator() (const Label* lhs, const Label* rhs) const {
+        return (lhs->length>rhs->length);
     }
 };
+
 
 class mycomparison_as {
     bool reverse;
@@ -84,12 +83,13 @@ public:
     mycomparison_as(const bool& revparam=false) {
     	reverse=revparam;
     }
-    bool operator() (const Label& lhs, const Label&rhs) const {
-        return (lhs.fDist>rhs.fDist);
+    bool operator() (const Label* lhs, const Label* rhs) const {
+        return (lhs->fDist>rhs->fDist);
     }
 };
 
-typedef priority_queue<Label,std::vector<Label>,mycomparison> PriorityQueue;
-typedef priority_queue<Label,std::vector<Label>,mycomparison_as> PriorityQueueAs;
+
+typedef priority_queue<Label*,std::vector<Label*>,mycomparison> PriorityQueue;
+typedef priority_queue<Label*,std::vector<Label*>,mycomparison_as> PriorityQueueAs;
 
 #endif

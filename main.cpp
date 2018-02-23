@@ -21,6 +21,9 @@
  
  
 #include <iostream>
+#include <fstream>
+#include <boost/regex.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "graph/graph.hpp"
 #include "preprocessing/algos.hpp"
@@ -58,34 +61,36 @@ int main(int argc, char **argv) {
 	    
     rN = new RoadNetwork(graphFile.c_str());
     
-	cerr << "Nodes = " << rN->numNodes << ", Edges = " << rN->numEdges << endl; 
+	cerr << "Nodes = " << rN->numNodes << ", Edges = " << rN->numEdges << endl;
     
 	/*
 		PREPROCESSING
 	*/
 	
 	int dist;
-	double totalTime = 0;
 	
-	pair<ComponentsMap,int> mapPair = loadComponents(rN,partitionFile);		
+	pair<ComponentsMap,int> mapPair = loadComponents(rN,partitionFile);
 	ParDiSP algo(rN,mapPair.first, mapPair.second);
 		
 	algo.preprocessing();
-
+    
 	/*
 		DISTANCE QUERIES
-	*/
-	
+	 */
+    int problems = 0;
 	cout << "----- DIST -----" << endl;
 	for(int i=1;i<=100;i++) {
     	int src = (int) (rand() % rN->numNodes);
     	int trg = (int) (rand() % rN->numNodes);
     	dist = algo.distance(src,trg);
-    	cout << i << ".\t" << src << "\t" << trg << "\t" << dist << endl;
-    	// int dist2 = Dijkstra(rN,src,trg).second;
-    	// cout << src << "\t" << trg << "\t" << dist << "\t" << dist2 << endl;
+    	//cout << i << ".\t" << src << "\t" << trg << "\t" << dist << endl;
+        int dist2 = Dijkstra(rN,src,trg).second;
+        if(mapPair.first[src] == mapPair.first[trg])       
+        	cout << src << "\t" << trg << "\t" << dist << "\t" << dist2 << endl;
+        if(dist != dist2)
+            problems++;
     }
-    
+    cout << "PROBLEMS: " << problems << endl;
   	
     delete rN;
     return 0;

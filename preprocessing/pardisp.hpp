@@ -62,8 +62,7 @@ struct ParDiSP {
 	void computeCDM(vector<bool> &transitGraphNodes);
 	void computeCDMWithCH(vector<NodeID> &transitNodes);
 	
-	int distance_local(int source, int target);
-	Path shortest_path_local(int source, int target);
+	pair<Path, double> ALT(RoadNetwork *rN, int source, int target);
 
 	ParDiSP();
 	//~ParDiSP();

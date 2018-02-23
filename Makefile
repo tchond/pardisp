@@ -1,5 +1,6 @@
 CC      = g++
-CFLAGS  = -g -fmessage-length=0 -w -c -Wall -D_LINUX -std=c++11 -Ofast
+BOOST 	= /opt/local/include/
+CFLAGS  = -g -fmessage-length=0 -w -c -Wall -D_LINUX -std=c++11 -Ofast -I$(BOOST)
 LDFLAGS =
 SOURCES = ch/SubgraphCH.cpp graph/graph.cpp graph/partition.cpp preprocessing/algos.cpp preprocessing/pardisp.cpp stats/benchmark.cpp main.cpp
 OBJECTS = $(SOURCES:.cpp=.o)

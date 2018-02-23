@@ -275,33 +275,33 @@ set<pair<int,int>> ParDiSP::computeIDTOutTransitPart(int component, unordered_se
     	std::vector<bool> visited(rN->numNodes, false);
     
     	newPath.push_back(target);
-    	Q.push(Label(target, newPath, newLength));
+    	Q.push(new Label(target, newPath, newLength));
     	
     	while (!Q.empty())     {
-        	Label curLabel = Q.top();
+        	Label *curLabel = Q.top();
         	Q.pop();
         	
-        	if (visited[curLabel.node_id])
+        	if (visited[curLabel->node_id])
             	continue;
       
-      		distances[curLabel.node_id] = curLabel.length;
+      		distances[curLabel->node_id] = curLabel->length;
       
-        	if (sources.find(curLabel.node_id) != sources.end()) {
-        		for(int i=0;i<curLabel.path.size()-1;i++) {
-        			auto v = result.insert(make_pair(curLabel.path[i], curLabel.path[i+1]));
+        	if (sources.find(curLabel->node_id) != sources.end()) {
+        		for(int i=0;i<curLabel->path.size()-1;i++) {
+        			auto v = result.insert(make_pair(curLabel->path[i], curLabel->path[i+1]));
         			//std::cout << v.second << "\n";
         		}
         	}
         
-        	visited[curLabel.node_id] = true;
+        	visited[curLabel->node_id] = true;
     
-            for (EdgeList::iterator iterAdj = rN->adjListInc[curLabel.node_id].begin(); iterAdj != rN->adjListInc[curLabel.node_id].end(); iterAdj++) {
-               	newLength = curLabel.length + iterAdj->second;
-               	newPath = curLabel.path;
+            for (EdgeList::iterator iterAdj = rN->adjListInc[curLabel->node_id].begin(); iterAdj != rN->adjListInc[curLabel->node_id].end(); iterAdj++) {
+               	newLength = curLabel->length + iterAdj->second;
+               	newPath = curLabel->path;
                	newPath.push_back(iterAdj->first);
                	if (!visited[iterAdj->first] &&  (this->cem[iterAdj->first][cm[target]] || this->cm[target]==this->cm[iterAdj->first])) // expanding only component extension
                 //if (!visited[iterAdj->first])
-                   	Q.push(Label(iterAdj->first, newPath, newLength));
+                   	Q.push(new Label(iterAdj->first, newPath, newLength));
             }
     	}
     	
@@ -347,25 +347,25 @@ void ParDiSP::computeIDTInc(int component, unordered_set<int> &sources, vector<i
     	std::vector<bool> visited(rN->numNodes, false);
     
     	newPath.push_back(target);
-    	Q.push(Label(target, newPath, newLength));
+    	Q.push(new Label(target, newPath, newLength));
     	
     	while (!Q.empty())     {
-        	Label curLabel = Q.top();
+        	Label *curLabel = Q.top();
         	Q.pop();
         	
-        	if (visited[curLabel.node_id])
+        	if (visited[curLabel->node_id])
             	continue;
       
-      		distances[curLabel.node_id] = curLabel.length;
+      		distances[curLabel->node_id] = curLabel->length;
               
-        	visited[curLabel.node_id] = true;
+        	visited[curLabel->node_id] = true;
     
-            for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel.node_id].begin(); iterAdj != rN->adjListOut[curLabel.node_id].end(); iterAdj++) {
-               	newLength = curLabel.length + iterAdj->second;
-               	newPath = curLabel.path;
+            for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel->node_id].begin(); iterAdj != rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
+               	newLength = curLabel->length + iterAdj->second;
+               	newPath = curLabel->path;
                	newPath.push_back(iterAdj->first);
                 if (!visited[iterAdj->first] && (this->cem[iterAdj->first][cm[target]] || this->cm[target]==this->cm[iterAdj->first])) // expanding only component extension
-                   	Q.push(Label(iterAdj->first, newPath, newLength));
+                   	Q.push(new Label(iterAdj->first, newPath, newLength));
             }
     	}
     	
@@ -422,7 +422,8 @@ int ParDiSP::distance(int source, int target) {
 		dist = tripleDistanceJoin(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp]);
 	}
 	else {
-		dist = DijkstraLimited(this->rN,source,target,this->cm,this->cem).second;
+		//dist = DijkstraLimited(this->rN,source,target,this->cm,this->cem).second;
+		dist = this->ALT(this->rN,source,target).second;
 	}
 	return dist;
 }
@@ -456,4 +457,91 @@ Path ParDiSP::shortest_path(int source, int target) {
 	
 	path.push_back(target);
 	return path;
+}
+
+
+pair<Path, double> ParDiSP::ALT(RoadNetwork *rN, int source, int target) {
+    
+    PriorityQueueAs Q;
+    Path resPath, newPath;
+    int newLength = 0,     resLength = 0;
+    int newLowerBound;
+    int bTo, bFrom;
+    std::vector<bool> visited(rN->numNodes, false);
+    vector<Label*> allCreatedLabels;
+        
+	int landmark = 0;
+    newLowerBound = 0;
+    int tmpBound;
+    for(int l = 0;l<this->outIDT[source].size();l++) {
+    	bTo = abs(this->outIDT[source][l]-this->outIDT[target][l]);
+   		bFrom = abs(this->incIDT[target][l]-this->incIDT[target][l]);
+    	if(bTo > bFrom)
+    		tmpBound = newLength + bTo;
+    	else 
+    		tmpBound = newLength + bFrom;
+    	
+    	if(tmpBound > newLowerBound) {
+    		landmark = l;
+    		newLowerBound = tmpBound;
+    	}
+    }    
+     
+    newPath.push_back(source);
+    
+    Label *label = new Label(source, newPath, newLength,newLowerBound);
+    Q.push(label);
+    allCreatedLabels.push_back(label);
+    
+    while (!Q.empty())     {
+        Label *curLabel = Q.top();
+        Q.pop();
+        
+        if (visited[curLabel->node_id])
+            continue;
+        
+        visited[curLabel->node_id] = true;
+        
+        // Found target.
+        if (curLabel->node_id == target) {
+            resPath = curLabel->path;
+            resLength = curLabel->length;
+            break;
+        }
+        // Expand search.
+        else {
+            // For each outgoing edge.
+            for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel->node_id].begin(); iterAdj != rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
+                newLength = curLabel->length + iterAdj->second;
+                newPath = curLabel->path;
+                newPath.push_back(iterAdj->first);
+                
+                if(this->cm[iterAdj->first] != this->cm[target] && this->cem[iterAdj->first][this->cm[target]]) {
+                	newLowerBound = newLength;
+                }
+                else {
+                	bTo = abs(this->outIDT[iterAdj->first][landmark]-this->outIDT[target][landmark]);
+    				bFrom = abs(this->incIDT[iterAdj->first][landmark]-this->incIDT[target][landmark]);
+    				if(bTo > bFrom)
+    					newLowerBound = newLength + bTo;
+    				else 
+    					newLowerBound = newLength + bFrom;
+                }
+    				
+                if (!visited[iterAdj->first]) {
+                	Label *tlabel = new Label(iterAdj->first, newPath, newLength, newLowerBound);
+                    Q.push(tlabel);
+                	allCreatedLabels.push_back(tlabel);
+                }
+            }
+        }
+    }
+    
+    //cout << "ALT labels = " << allCreatedLabels.size() << endl; 
+    for(int i=0;i<allCreatedLabels.size();i++) {
+    	delete allCreatedLabels[i];
+    }
+    allCreatedLabels.clear();
+    
+    return make_pair(resPath, resLength);
 }
