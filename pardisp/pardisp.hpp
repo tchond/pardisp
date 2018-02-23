@@ -31,20 +31,6 @@
 
 using namespace std;
 
-pair<Path,double> Dijkstra(RoadNetwork *rN, int source, int target);
-vector<int> DijkstraToAll(RoadNetwork *rN, int source);
-vector<int> DijkstraFromAll(RoadNetwork *rN, int target);
-vector<double> DijkstraToMany(RoadNetwork *rN, int source, unordered_set<int> targets);
-pair<Path,double> DijkstraRev(RoadNetwork *rN, int source, int target);
-
-pair<Path, double> DijkstraLimited(RoadNetwork *rN, int source, int target, vector<int> &cm, vector<vector<bool>> &cemEntry);
-
-
-// This function is used to compute the component extension
-set<int> getPathsUnion(RoadNetwork *rN, unordered_set<int> &sources, unordered_set<int> &targets);
-
-vector<pair<int,int>> DijkstraFromMany(RoadNetwork *rN, int source, vector<bool> &targets, vector<bool> &transitGraphNodes, int limit);
-
 class Label {
 public:
     int node_id;
@@ -110,53 +96,52 @@ typedef priority_queue<Label*,std::vector<Label*>,mycomparison_as> PriorityQueue
 
 typedef vector<bool> BordersMap; // Size=N, value returns whether the node is a border or not (we use to such maps for incoming and outgoing)
 typedef vector<vector<int>> BordersStore; // Size=|components|, size of each set varies. Each set contains the id's of the borders ordered by value
-typedef vector<vector<bool>> CompExtensionsMap; // Size=N, size of each vector=|components|, each value shows whether the node is in a given extended component.
-
-typedef vector<vector<int>> DistanceTable; // Size=N, size of each vector=[node.component.borders.size], these values are the distances from one node to all the borders of the same component
 typedef vector<vector<vector<int>>> ComponentDistanceMatrix; // Size=|components|x|components|x(|B_inc(C) x B_out(C)|
+typedef vector<vector<bool>> CompExtensionsMap; // Size=N, size of each vector=|components|, each value shows whether the node is in a given extended component.
+typedef vector<vector<int>> DistanceTable; // Size=N, size of each vector=[node.component.borders.size], these values are the distances from one node to all the borders of the same component
 
 /*
 	Classes for modeling the algorithm
 */
 
-int tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
-pair<int,int> tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
-
-struct ParDiSP {
+class ParDiSP {
 	RoadNetwork *rN;
-	ComponentsMap cm;
-	CompExtensionsMap cem;
-	ComponentDistanceMatrix cdm;
 	int numComponents;
 	
 	// Structures required by ParDiSP
+	ComponentsMap cm;
+	CompExtensionsMap cem;
+	ComponentDistanceMatrix cdm;
 	BordersMap incBordersMap; BordersMap outBordersMap;
 	BordersStore incBordersStore; BordersStore outBordersStore;
 	DistanceTable incIDT; DistanceTable outIDT; // Distances to/from each node from/to each outgoing border node 
-	
 	SubgraphCH *transitNet;
 
+	// Preprocessing
+	void preprocessing();
+	set<int> get_paths_union(unordered_set<int> &sources, unordered_set<int> &targets);
 	set<pair<int,int>> computeIDTOutTransitPart(int component, unordered_set<int> &sources, vector<int> &targets);
 	void computeIDTInc(int component, unordered_set<int> &sources, vector<int> &targets);
-	void computeCDM(vector<bool> &transitGraphNodes);
 	void computeCDMWithCH(vector<NodeID> &transitNodes);
 	
-	double ALT(RoadNetwork *rN, int source, int target);
+	// In-component queries
+	double ALT(int source, int target);
 	pair<Path, double> ALT_Path(RoadNetwork *rN, int source, int target);
 
-	ParDiSP();
-	//~ParDiSP();
+	// Cross-component queries	
+	int tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
+	pair<int,int> tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
+	
+	// Public constructor and query processing methods
+public:
 	ParDiSP(RoadNetwork *rN, ComponentsMap &cm, int components);
-	void preprocessing();
+	~ParDiSP() {};
 	int distance(int source, int target);
 	Path shortest_path(int source, int target);
-	
-	// More functions for exporting the pre-computed structures
-	void precomputeExtendedComponents();
-	void preprocessingWithExtComp();
-	
-	void computeBorders();
-	void loadExtendedComponents(string filename);
 };
+
+/* TESTING */
+pair<Path,double> Dijkstra(RoadNetwork *rN, int source, int target);
+pair<Path, double> DijkstraLimited(RoadNetwork *rN, int source, int target, vector<int> &cm, vector<vector<bool>> &cemEntry);
 
 #endif

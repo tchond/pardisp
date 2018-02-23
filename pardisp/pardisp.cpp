@@ -27,7 +27,6 @@
 
 #include "pardisp.hpp"
 #include "../stats/benchmark.hpp"
-#include "algos.hpp"
 
 using namespace std;
 
@@ -44,6 +43,7 @@ ParDiSP::ParDiSP(RoadNetwork *rN, ComponentsMap &cm, int numComponents) {
 	this->outIDT = DistanceTable(rN->numNodes);
 	
 	this->cdm = ComponentDistanceMatrix(this->numComponents,vector<vector<int>>(this->numComponents));
+	this->preprocessing();
 }
 
 /*
@@ -103,7 +103,7 @@ void ParDiSP::preprocessing() {
 	cerr << "Computing extended components" << endl;
 	sTime = GetTimeSec();
 	for(int i=0;i<compSize;i++) {
-		set<int> extComp = getPathsUnion(rN, bordersOutMap[i], bordersIncMap[i]);
+		set<int> extComp = get_paths_union(bordersOutMap[i], bordersIncMap[i]);
 		for(set<int>::iterator it = extComp.begin(); it != extComp.end() ; it++) {
 			this->cem[*it][i] = true; // I THINK IT IS HERE!!!
 		}	
@@ -269,10 +269,10 @@ int ParDiSP::distance(int source, int target) {
 	int dist = -1;
 	
 	if(srcComp != trgComp) {
-		dist = tripleDistanceJoin(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp]);
+		dist = this->tripleDistanceJoin(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp]);
 	}
 	else {
-		dist = this->ALT(this->rN,source,target);
+		dist = this->ALT(source,target);
 	}
 	return dist;
 }
@@ -293,7 +293,7 @@ Path ParDiSP::shortest_path(int source, int target) {
 	int dist = -1;
 	
 	if(srcComp != trgComp) {
-		borders = tripleDistanceJoinBorders(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp]);
+		borders = this->tripleDistanceJoinBorders(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp]);
 		//if(this->transitNet == NULL) {
 		//	cout << "Another WOW" << endl;
 		//	exit(1);
@@ -306,6 +306,125 @@ Path ParDiSP::shortest_path(int source, int target) {
 	
 	path.push_back(target);
 	return path;
+}
+
+/*
+	Dijkstra's algorithm for testing purposes
+*/
+
+pair<Path, double> Dijkstra(RoadNetwork *rN, int source, int target) {
+    
+    PriorityQueue Q;
+    Path resPath, newPath;
+    double newLength = 0,     resLength = 0;
+    std::vector<bool> visited(rN->numNodes, false);
+    
+    newPath.push_back(source);
+    vector<Label*> allCreatedLabels;
+    
+    Label *label = new Label(source, newPath, newLength);
+    Q.push(label);
+    allCreatedLabels.push_back(label);
+    
+    while (!Q.empty())     {
+        Label *curLabel = Q.top();
+        Q.pop();
+        
+        if (visited[curLabel->node_id])
+            continue;
+        
+        visited[curLabel->node_id] = true;
+        
+        // Found target.
+        if (curLabel->node_id == target) {
+            resPath = curLabel->path;
+            resLength = curLabel->length;
+            break;
+        }
+        // Expand search.
+        else {
+            // For each outgoing edge.
+            for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel->node_id].begin(); iterAdj != rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
+                newLength = curLabel->length + iterAdj->second;
+                newPath = curLabel->path;
+                newPath.push_back(iterAdj->first);
+                if (!visited[iterAdj->first]) {
+                	Label *tlabel = new Label(iterAdj->first, newPath, newLength);
+                    Q.push(tlabel);
+                    allCreatedLabels.push_back(tlabel);
+                }
+            }
+        }
+    }
+    
+    int visitedCount = 0;
+    for(int i=0;i<visited.size();i++) {
+    	if(visited[i])
+    		visitedCount++;
+    }
+    //cout << "Dijkstra visited = " << visitedCount << endl; 
+    
+    for(int i=0;i<allCreatedLabels.size();i++) {
+    	delete allCreatedLabels[i];
+    }
+    allCreatedLabels.clear();
+    
+    return make_pair(resPath, resLength);
+}
+
+pair<Path, double> DijkstraLimited(RoadNetwork *rN, int source, int target, vector<int> &cm, vector<vector<bool>> &cem) {
+        
+    PriorityQueue Q;
+    Path resPath, newPath;
+    double newLength = 0,     resLength = 0;
+    std::vector<bool> visited(rN->numNodes, false);
+    vector<Label*> allCreatedLabels;
+    
+    newPath.push_back(source);
+    
+    Label *label = new Label(source, newPath, newLength);
+    Q.push(label);
+    allCreatedLabels.push_back(label);
+    
+    while (!Q.empty())     {
+        Label *curLabel = Q.top();
+        Q.pop();
+        
+        if (visited[curLabel->node_id])
+            continue;
+        
+        visited[curLabel->node_id] = true;
+        
+        // Found target.
+        if (curLabel->node_id == target) {
+            resPath = curLabel->path;
+            resLength = curLabel->length;
+            break;
+        }
+        // Expand search.
+        else {
+            // For each outgoing edge.
+            for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel->node_id].begin(); iterAdj != rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
+                newLength = curLabel->length + iterAdj->second;
+                newPath = curLabel->path;
+                newPath.push_back(iterAdj->first);
+                //if (!visited[iterAdj->first])
+                if (!visited[iterAdj->first] && (cm[iterAdj->first] == cm[source] || cem[iterAdj->first][cm[source]])) {
+                	Label *tlabel = new Label(iterAdj->first, newPath, newLength);
+                    Q.push(tlabel);
+                    allCreatedLabels.push_back(tlabel);
+                }
+            }
+        }
+    }
+    
+    cout << "Dijkstra Limited labels = " << allCreatedLabels.size() << endl; 
+    for(int i=0;i<allCreatedLabels.size();i++) {
+    	delete allCreatedLabels[i];
+    }
+    allCreatedLabels.clear();
+    
+    return make_pair(resPath, resLength);
 }
 
 

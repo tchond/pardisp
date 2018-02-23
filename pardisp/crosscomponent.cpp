@@ -21,7 +21,7 @@
  
  #include "pardisp.hpp"
  
-int tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry) {
+int ParDiSP::tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry) {
 	
 	int minDist = INT_MAX;
 	int dist;
@@ -51,7 +51,7 @@ int tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<i
 	return minDist;
 }
 
-pair<int,int> tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry) {
+pair<int,int> ParDiSP::tripleDistanceJoinBorders(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry) {
 	
 	pair<int,int> borders;
 	

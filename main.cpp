@@ -26,8 +26,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "graph/graph.hpp"
-#include "preprocessing/algos.hpp"
-#include "preprocessing/pardisp.hpp"
+#include "pardisp/pardisp.hpp"
+#include "stats/benchmark.hpp"
 
 using namespace std;
 
@@ -67,30 +67,38 @@ int main(int argc, char **argv) {
 		PREPROCESSING
 	*/
 	
-	int dist;
+	int dist, dist2;
 	
 	pair<ComponentsMap,int> mapPair = loadComponents(rN,partitionFile);
 	ParDiSP algo(rN,mapPair.first, mapPair.second);
-		
-	algo.preprocessing();
-    
+		    
 	/*
 		DISTANCE QUERIES
 	 */
+	 
+	double timeStart, timePardisp = 0, timeDijkstra = 0;
+	 
     int problems = 0;
 	cout << "----- DIST -----" << endl;
-	for(int i=1;i<=100;i++) {
+	for(int i=1;i<=1000;i++) {
     	int src = (int) (rand() % rN->numNodes);
     	int trg = (int) (rand() % rN->numNodes);
+    	
+    	timeStart = GetTimeMicros();
     	dist = algo.distance(src,trg);
-    	//cout << i << ".\t" << src << "\t" << trg << "\t" << dist << endl;
-        int dist2 = Dijkstra(rN,src,trg).second;
-        if(mapPair.first[src] == mapPair.first[trg])       
-        	cout << src << "\t" << trg << "\t" << dist << "\t" << dist2 << endl;
+    	timePardisp += GetTimeMicros() - timeStart;
+    	
+    	timeStart = GetTimeMicros();
+        dist2 = Dijkstra(rN,src,trg).second;
+        timeDijkstra += GetTimeMicros() - timeStart;
+        
+        cout << src << "\t" << trg << "\t" << dist << "\t" << dist2 << endl;
         if(dist != dist2)
             problems++;
     }
     cout << "PROBLEMS: " << problems << endl;
+    cout << "ParDiSP time: " << (timePardisp/1000) << endl;
+    cout << "Dijkstra time: " << (timeDijkstra/1000) << endl;
   	
     delete rN;
     return 0;

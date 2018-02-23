@@ -21,13 +21,13 @@
  
  #include "pardisp.hpp"
 
-double ParDiSP::ALT(RoadNetwork *rN, int source, int target) {
+double ParDiSP::ALT(int source, int target) {
     
     PriorityQueueAs Q;
     int newLength = 0, resLength = 0;
     int newLowerBound;
     int bTo, bFrom;
-    std::vector<bool> visited(rN->numNodes, false);
+    std::vector<bool> visited(this->rN->numNodes, false);
     vector<Label*> allCreatedLabels;
         
 	int landmark = 0;
@@ -68,7 +68,7 @@ double ParDiSP::ALT(RoadNetwork *rN, int source, int target) {
         // Expand search.
         else {
             // For each outgoing edge.
-            for (EdgeList::iterator iterAdj = rN->adjListOut[curLabel->node_id].begin(); iterAdj != rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
+            for (EdgeList::iterator iterAdj = this->rN->adjListOut[curLabel->node_id].begin(); iterAdj != this->rN->adjListOut[curLabel->node_id].end(); iterAdj++) {
                 newLength = curLabel->length + iterAdj->second;
                 
                 if(this->cm[iterAdj->first] != this->cm[target] && this->cem[iterAdj->first][this->cm[target]]) {
