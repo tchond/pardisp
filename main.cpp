@@ -66,27 +66,23 @@ int main(int argc, char **argv) {
 	/*
 		PREPROCESSING
 	*/
-	
-	int dist, dist2;
-	
+		
 	pair<ComponentsMap,int> mapPair = loadComponents(rN,partitionFile);
 	ParDiSP algo(rN,mapPair.first, mapPair.second);
 		    
 	/*
-		DISTANCE QUERIES
+		QUERY PROCESSING
 	 */
-	 	 
-	cout << "----- DIST -----" << endl;
-	for(int i=1;i<=1000;i++) {
-    	int src = (int) (rand() % rN->numNodes);
-    	int trg = (int) (rand() % rN->numNodes);
+	int src = (int) (rand() % rN->numNodes);
+    int trg = (int) (rand() % rN->numNodes);
+    	    	
+    // DISTANCE QUERY
+    int dist = algo.distance(src,trg);
     	
-    	dist = algo.distance(src,trg);
-        
-        cout << src << "\t" << trg << "\t" << dist << endl;
-        	
-    }
-  	
+    // SHORTEST PATH QUERY
+    pair<Path,int> pardispRes = algo.shortest_path(src,trg);
+	
+	
     delete rN;
     return 0;
 }

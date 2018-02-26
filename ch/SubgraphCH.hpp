@@ -48,14 +48,14 @@ typedef processing::ConstructCH<datastr::graph::UpdateableGraph> ProcessingCH;
 
 struct SubgraphCH {
 	datastr::graph::UpdateableGraph* updGraph;
-	unordered_map<int,int> mapOrigToTransit;
+	vector<int> mapOrigToTransit;
 	vector<int> mapTransitToOrig;
 	
 	SubgraphCH();
-	SubgraphCH(vector<pair<pair<int,int>,int>> &edgesWithWeights, unordered_map<int,int> &mapOrigToTransit, vector<int> &mapTransitToOrig);
+	SubgraphCH(vector<pair<pair<int,int>,int>> &edgesWithWeights, vector<int> &mapOrigToTransit, vector<int> &mapTransitToOrig);
 
 	Matrix<EdgeWeight> manyToMany(vector<NodeID> sources, vector<NodeID> targets);
-	int get_shortest_path(int source, int target);
+	vector<NodeID> get_shortest_path(int source, int target);
 };
 
 // doesn't look nice, but required by the compiler (gcc 4)

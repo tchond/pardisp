@@ -22,4 +22,5 @@ clean:
 	rm -rf ./ch/*.o
 	rm -rf ./stats/*.o
 	rm -rf ./graph/*.o
+	rm -rf ./pardisp/*.o
 	rm -rf run.exec

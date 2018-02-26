@@ -161,12 +161,12 @@ void ParDiSP::preprocessing() {
 		trEdgesWeights.push_back(make_pair(p,w));
 	}
 	
-	unordered_map<int,int> mapOrigToTransit;
+	vector<int> mapOrigToTransit(this->rN->numNodes, -1);
 	vector<int> mapTransitToOrig;
 	int t_count = 0;
 	for(int i=0;i<transitGraphNodes.size();i++) {
 		if(transitGraphNodes[i]) {
-			mapOrigToTransit.insert(make_pair(i,t_count));
+			mapOrigToTransit[i] = t_count;
 			mapTransitToOrig.push_back(i);
 			t_count++;
 			transitNodes.push_back(i);
@@ -282,10 +282,9 @@ int ParDiSP::distance(int source, int target) {
 	-----
 	Return the shortest path from the source to the target.
 */
-/*
+
 pair<Path,int> ParDiSP::shortest_path(int source, int target) {
 	pair<Path,int> result;
-	result.first.push_back(source);
 	
 	int srcComp = this->cm[source];
 	int trgComp = this->cm[target];
@@ -295,25 +294,56 @@ pair<Path,int> ParDiSP::shortest_path(int source, int target) {
 	
 	if(srcComp != trgComp) {
 		borders = this->tripleDistanceJoinBorders(this->outIDT[source], this->incIDT[target], this->cdm[srcComp][trgComp], srcComp, trgComp);
+		int srcBorder = this->outBordersStore[srcComp][borders.first.first];
+		int trgBorder = this->incBordersStore[trgComp][borders.first.second];
 		
-		// The next three need to change
-		int medDist = this->transitNet->get_shortest_path(borders.first.first, borders.first.second);
-		//int srcDist = this->ALT(source, borders.first.first);
-		//int trgDist = this->ALT(borders.first.second, target);
-		//cout << "[DEBUG] " << this->cm[source] << " - " << this->cm[target] << endl;
-		//cout << "[DEBUG] " << this->cm[borders.first.first] << " - " << this->cm[borders.first.second] << endl;
-		//cout << "[DEBUG] " << borders.first.first << " - " << borders.first.second << endl;
-		//cout << "[DEBUG] " << srcDist << " + " << medDist << " + " << trgDist << " == " << borders.second << endl;
+		//cout << source << "(" << this->cm[source] << ") -> " << srcBorder << "(" << this->cm[srcBorder] << ") -> " << trgBorder << "(" << this->cm[trgBorder] << ") -> " << target << "(" << this->cm[target] << ")" << endl;
+		
+		if(source != srcBorder)	{
+			//result.first = this->ALT_Path(source,srcBorder).first;
+			
+			//for(int i=0;i<result.first.size();i++) {
+			//	cout << result.first[i] << " -> ";
+			//}
+			//cout << endl;
+			
+			result.first = this->nodeToBorderRetrieval(source,borders.first.first);
+			
+			//for(int i=0;i<result.first.size();i++) {
+			//	cout << result.first[i] << " -> ";
+			//}
+			//cout << endl;
+		}
+
+		vector<NodeID> secondSegment = this->transitNet->get_shortest_path(srcBorder, trgBorder);
+		for(int i=1;i<secondSegment.size()-1;i++) {
+			result.first.push_back(this->transitNet->mapTransitToOrig[secondSegment[i]]);
+		}
+
+		//vector<int> thirdSegment = this->ALT_Path(trgBorder, target).first;
+		
+		//for(int i=0;i<thirdSegment.size();i++) {
+		//	cout << thirdSegment[i] << " -> ";
+		//}
+		//cout << endl;
+		
+		vector<int> thirdSegment = this->borderToNodeRetrieval(borders.first.second, target);
+		
+		//for(int i=0;i<thirdSegment.size();i++) {
+		//	cout << thirdSegment[i] << " -> ";
+		//}
+		//cout << endl;
+		result.first.insert(result.first.end(),thirdSegment.begin(), thirdSegment.end());
+		
 		result.second = borders.second;
-		//result.second = srcDist + medDist + trgDist;
 	}
 	else {
-		result.second = this->ALT_Path(this->rN,source,target).second;
+		result = this->ALT_Path(source,target);
 	}
-	result.first.push_back(target);
+	
 	return result;
 }
-*/
+
 /*
 	Dijkstra's algorithm for testing purposes
 */
@@ -414,7 +444,6 @@ pair<Path, double> DijkstraLimited(RoadNetwork *rN, int source, int target, vect
                 newLength = curLabel->length + iterAdj->second;
                 newPath = curLabel->path;
                 newPath.push_back(iterAdj->first);
-                //if (!visited[iterAdj->first])
                 if (!visited[iterAdj->first] && (cm[iterAdj->first] == cm[source] || cem[iterAdj->first][cm[source]])) {
                 	Label *tlabel = new Label(iterAdj->first, newPath, newLength);
                     Q.push(tlabel);

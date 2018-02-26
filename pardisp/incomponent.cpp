@@ -112,8 +112,7 @@ double ParDiSP::ALT(int source, int target) {
         }
         //cout << "-------" << endl;
     }
-    //cout << this->cm[source] << " = " << this->cm[target] << endl;
-    //cout << "ALT labels = " << allCreatedLabels.size() << endl; 
+
     for(int i=0;i<allCreatedLabels.size();i++) {
     	delete allCreatedLabels[i];
     }
@@ -122,8 +121,8 @@ double ParDiSP::ALT(int source, int target) {
     return resLength;
 }
 
-pair<Path, double> ParDiSP::ALT_Path(RoadNetwork *rN, int source, int target) {
-    
+pair<Path, double> ParDiSP::ALT_Path(int source, int target) {
+        
     PriorityQueueAs Q;
     Path resPath, newPath;
     int newLength = 0,     resLength = 0;
@@ -203,7 +202,6 @@ pair<Path, double> ParDiSP::ALT_Path(RoadNetwork *rN, int source, int target) {
             }
         }
     }
-    
     //cout << "ALT labels = " << allCreatedLabels.size() << endl; 
     for(int i=0;i<allCreatedLabels.size();i++) {
     	delete allCreatedLabels[i];

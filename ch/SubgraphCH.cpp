@@ -26,7 +26,7 @@ SubgraphCH::SubgraphCH() {
 	cout << "Not implemented yet!" << endl;
 }
 
-SubgraphCH::SubgraphCH(vector<pair<pair<int,int>,int>> &edgesWithWeights, unordered_map<int,int> &mapOrigToTransit, vector<int> &mapTransitToOrig) {
+SubgraphCH::SubgraphCH(vector<pair<pair<int,int>,int>> &edgesWithWeights, vector<int> &mapOrigToTransit, vector<int> &mapTransitToOrig) {
 	
 	this->mapOrigToTransit = mapOrigToTransit;
 	this->mapTransitToOrig = mapTransitToOrig;
@@ -87,11 +87,12 @@ Matrix<EdgeWeight> SubgraphCH::manyToMany(vector<NodeID> sources, vector<NodeID>
     return matrix;
 }
 
-int SubgraphCH::get_shortest_path(int source, int target) {
+vector<NodeID> SubgraphCH::get_shortest_path(int source, int target) {
 	PathCH p(source);	
 	DijkstraSearchBidir dijkstra(this->updGraph);
-	int dist = dijkstra.bidirSearch(this->mapOrigToTransit[source], this->mapOrigToTransit[target]);
-	dijkstra.pathTo(p, this->mapOrigToTransit[target]);
+	int transitTarget = this->mapOrigToTransit[target];
+	dijkstra.bidirSearch(this->mapOrigToTransit[source], transitTarget);
+	p = dijkstra.pathTo(p, transitTarget, -1, true, true);
     dijkstra.clear();
-    return dist;
+    return p._nodes;
 }

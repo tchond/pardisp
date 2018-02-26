@@ -126,7 +126,7 @@ class ParDiSP {
 	
 	// In-component queries
 	double ALT(int source, int target);
-	pair<Path, double> ALT_Path(RoadNetwork *rN, int source, int target);
+	pair<Path, double> ALT_Path(int source, int target);
 
 	// Cross-component queries	
 	int tripleDistanceJoin(vector<int> &idtSource, vector<int> &idtTarget,  vector<int> &cdmEntry);
